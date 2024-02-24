@@ -21,8 +21,21 @@ struct ListItem: Identifiable {
     var items: [DetailItem] = []
 }
 
+struct TeamMembersView: View {
+    var body: some View {
+        List {
+            Text("Kaarish")
+            Text("Ali")
+            Text("Amir")
+            Text("Alvaro")
+        }
+        .navigationTitle("Team Members")
+    }
+}
+
+
 struct AddGroupView: View {
-    @Binding var listItems: [ListItem] // Binding to the list items array
+    @Binding var listItems: [ListItem]
     @Environment(\.presentationMode) var presentationMode
     @State private var groupName: String = ""
 
@@ -42,7 +55,7 @@ struct AddGroupView: View {
     private func addNewGroup() {
         let newItem = ListItem(title: groupName, count: 0)
         listItems.append(newItem)
-        presentationMode.wrappedValue.dismiss() // Dismiss the view
+        presentationMode.wrappedValue.dismiss()
     }
 }
 
@@ -165,10 +178,7 @@ struct ContentView: View {
                 }
                 .navigationTitle("Grocery List")
                 .toolbar {
-                    // Add the edit button
                     EditButton()
-                        
-                    // Add button to show the 'Add Group' screen
                     Button(action: { showingAddGroupView = true }) {
                         Label("Add New Group", systemImage: "plus")
                     }
@@ -193,4 +203,3 @@ struct ContentView_Previews: PreviewProvider {
         ContentView()
     }
 }
-
