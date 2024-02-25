@@ -107,7 +107,7 @@ struct AddGroupView: View {
                         Spacer()
                     }
                     .padding()
-                    .background(Color.green)
+                    .background(Color(hex: "#1AE51A"))
                     .cornerRadius(10)
                     .padding(.horizontal)
                     .foregroundColor(Color.white)
@@ -162,7 +162,7 @@ struct ListItemDetailView: View {
                     }
                     .padding()
                     .frame(minWidth: 0, maxWidth: .infinity)
-                    .background(Color.green)
+                    .background(Color(hex: "#1AE51A"))
                     .foregroundColor(.white)
                     .cornerRadius(10)
                 }
@@ -264,7 +264,7 @@ struct TotalView: View {
                 }
                 .frame(minWidth: 0, maxWidth: .infinity)
                 .padding()
-                .background(Color.green)
+                .background(Color(hex: "#1AE51A"))
                 .foregroundColor(.white)
                 .cornerRadius(10)
             }
@@ -385,7 +385,7 @@ struct ContentView: View {
                     .frame(minWidth: 0, maxWidth: .infinity)
                     .padding()
                     .foregroundColor(.white)
-                    .background(Color.green)
+                    .background(Color(hex: "#1AE51A"))
                     .cornerRadius(10)
                 }
                 .padding(.horizontal)
@@ -422,5 +422,21 @@ struct ContentView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
+    }
+}
+
+extension Color {
+    init(hex: String) {
+        let scanner = Scanner(string: hex)
+        _ = scanner.scanString("#")
+        
+        var rgb: UInt64 = 0
+        scanner.scanHexInt64(&rgb)
+        
+        let r = Double((rgb >> 16) & 0xFF) / 255.0
+        let g = Double((rgb >> 8) & 0xFF) / 255.0
+        let b = Double(rgb & 0xFF) / 255.0
+        
+        self.init(red: r, green: g, blue: b)
     }
 }
