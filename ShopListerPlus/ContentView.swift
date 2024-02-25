@@ -249,7 +249,7 @@ struct ContentView: View {
                 }
             }
             .sheet(isPresented: $showingAddGroupView) {
-                            AddGroupView(listItems: $viewModel.listItems) // Modify this to work with ViewModel
+                            AddGroupView(listItems: $viewModel.listItems)
                         }
                         .sheet(isPresented: $showingAboutView) {
                             AboutView()
