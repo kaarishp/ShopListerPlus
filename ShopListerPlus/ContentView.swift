@@ -1,10 +1,15 @@
 //
 //  ContentView.swift
-//  Project
+//  Final_Project
+//  Group 20
+//  COMP 3097
+//  CRN: 50497
+//  Przemyslaw Pawluk
+//  George Brown College
 //
 //  Created by Kaarish Parameswaran on 2024-02-24.
 //  Edited by Ali Al Aoraebi on 2024-02-25.
-//  Group 20
+//
 
 import SwiftUI
 
@@ -129,9 +134,7 @@ struct AddGroupView: View {
 struct ListItemDetailView: View {
     @Binding var listItem: ListItem
     @State private var showingAddItemView = false
-    @State private var showingTotalWithTaxAlert = false
-    
-    let taxRate: Double = 0.13 // Tax rate of 13%
+    @State private var showingTotalView = false
     
     var body: some View {
         VStack {
@@ -164,12 +167,12 @@ struct ListItemDetailView: View {
                     .cornerRadius(10)
                 }
                 Button(action: {
-                    showingTotalWithTaxAlert = true
+                    showingTotalView = true  // Set this to true to show the TotalView
                 }) {
                     Text("View Total")
                         .padding()
                         .frame(minWidth: 0, maxWidth: .infinity)
-                        .background(Color.gray)
+                        .background(Color.gray.opacity(0.5))
                         .foregroundColor(.white)
                         .cornerRadius(10)
                 }
@@ -177,18 +180,12 @@ struct ListItemDetailView: View {
             .padding(.horizontal)
         }
         .navigationTitle(listItem.title)
-        .alert(isPresented: $showingTotalWithTaxAlert) {
-            Alert(title: Text("Total Cost with Tax"), message: Text(totalWithTaxAsString()), dismissButton: .default(Text("OK")))
-        }
         .sheet(isPresented: $showingAddItemView) {
             AddItemView(detailItems: $listItem.items)
         }
-    }
-    
-    private func totalWithTaxAsString() -> String {
-        let subtotal = listItem.items.reduce(0) { $0 + $1.cost * Double($1.amount) }
-        let totalWithTax = subtotal * (1 + taxRate)
-        return String(format: "$%.2f", totalWithTax)
+        .sheet(isPresented: $showingTotalView) {  // Present the TotalView as a sheet
+            TotalView(items: listItem.items)  // Pass the list of items to TotalView
+        }
     }
     
     private func deleteItems(at offsets: IndexSet) {
@@ -196,6 +193,96 @@ struct ListItemDetailView: View {
     }
 }
 
+struct TotalView: View {
+    let items: [DetailItem]
+    let taxRate: Double = 0.13
+    @Environment(\.presentationMode)
+    var presentationMode : Binding<PresentationMode>
+
+    var body: some View {
+        VStack {
+            Text("Total (\(items.count))")
+                .font(.title)
+                .fontWeight(.bold)
+                .padding(.top)
+
+            // List the hardcoded items with dividers
+            ForEach(items, id: \.self) { item in
+                HStack {
+                    Text(item.name)
+                    Spacer()
+                    Text("$\(item.cost, specifier: "%.2f")")
+                }
+                Divider()
+            }
+            Spacer()
+
+            VStack(alignment: .trailing) { // Align to the right side
+                Text("Total Cost")
+                    .fontWeight(.bold)
+                Text("$\(calculateTotal(), specifier: "%.2f")")
+            }
+            .frame(maxWidth: .infinity, alignment: .trailing) // Align VStack to the right side
+            .padding(.trailing) // Add padding to the right
+
+            Divider()
+
+            Button("Calculate Total with Tax") {
+                // Action to calculate total with tax
+            }
+            .padding()
+            .frame(maxWidth: .infinity)
+            .background(Color.gray.opacity(0.5))
+            .foregroundColor(.white)
+            .cornerRadius(10)
+
+            Divider()
+
+            VStack(alignment: .trailing) {
+                Text("Total Cost with Tax")
+                    .fontWeight(.bold)
+                Text("$\(calculateTotalWithTax(), specifier: "%.2f")")
+            }
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            .padding(.trailing)
+
+            Divider()
+            
+            Spacer()
+
+            HStack {
+                Button("View Item List") {
+                    self.presentationMode.wrappedValue.dismiss()
+                }
+                .frame(minWidth: 0, maxWidth: .infinity)
+                .padding()
+                .background(Color.gray.opacity(0.5))
+                .foregroundColor(.white)
+                .cornerRadius(10)
+
+                Button("Checkout") {
+                    // Action for checkout
+                }
+                .frame(minWidth: 0, maxWidth: .infinity)
+                .padding()
+                .background(Color.green)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+            }
+        }
+        .padding()
+    }
+    
+    private func calculateTotal() -> Double {
+        // Total cost of items
+        return items.reduce(0) { $0 + $1.cost * Double($1.amount) }
+    }
+    
+    private func calculateTotalWithTax() -> Double {
+        // Total cost including tax
+        return calculateTotal() * (1 + taxRate)
+    }
+}
 
 struct AddItemView: View {
     @Binding var detailItems: [DetailItem]
@@ -332,7 +419,6 @@ struct ContentView: View {
         viewModel.listItems.move(fromOffsets: source, toOffset: destination)
     }
 }
-
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
