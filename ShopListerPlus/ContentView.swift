@@ -21,15 +21,23 @@ struct ListItem: Identifiable {
     var items: [DetailItem] = []
 }
 
-struct TeamMembersView: View {
+
+struct AboutView: View {
+    @Environment(\.presentationMode) var presentationMode
+
     var body: some View {
-        List {
-            Text("Kaarish")
-            Text("Ali")
-            Text("Amir")
-            Text("Alvaro")
+        NavigationView {
+            List {
+                Text("Kaarish Parameswaran - 101355699")
+                Text("Ali Al Aoraebi - 101386021")
+                Text("Alvaro Aguirre Meza  - 101349908")
+                Text("Amir Yektajoo- 101367389")
+            }
+            .navigationTitle("Team Members")
+            .navigationBarItems(trailing: Button("Done") {
+                presentationMode.wrappedValue.dismiss() 
+            })
         }
-        .navigationTitle("Team Members")
     }
 }
 
@@ -155,39 +163,52 @@ struct AddItemView: View {
 }
 
 struct ContentView: View {
-    @State private var listItems: [ListItem] = [
-        // Your initial list items
-    ]
+    @State private var listItems: [ListItem] = []
     @State private var showingAddGroupView = false
+    @State private var showingAboutView = false // For showing the AboutView
     
     var body: some View {
-            NavigationView {
-                List {
-                    ForEach($listItems) { $item in
-                        NavigationLink(destination: ListItemDetailView(listItem: $item)) {
-                            HStack {
-                                Text(item.title)
-                                Spacer()
-                                Text("\(item.items.count)")
-                                    .foregroundColor(.gray)
-                            }
+        NavigationView {
+            List {
+                ForEach($listItems) { $item in
+                    NavigationLink(destination: ListItemDetailView(listItem: $item)) {
+                        HStack {
+                            Text(item.title)
+                            Spacer()
+                            Text("\(item.items.count)").foregroundColor(.gray)
                         }
                     }
-                    .onDelete(perform: deleteItem)
-                    .onMove(perform: moveItem)
                 }
-                .navigationTitle("Grocery List")
-                .toolbar {
-                    EditButton()
+                .onDelete(perform: deleteItem)
+                .onMove(perform: moveItem)
+            }
+            .navigationTitle("Grocery List")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("About") {
+                        showingAboutView = true
+                    }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { showingAddGroupView = true }) {
                         Label("Add New Group", systemImage: "plus")
                     }
                 }
-                .sheet(isPresented: $showingAddGroupView) {
-                    AddGroupView(listItems: $listItems)
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    EditButton()
                 }
             }
+            .sheet(isPresented: $showingAddGroupView) {
+                AddGroupView(listItems: $listItems)
+            }
+            .sheet(isPresented: $showingAboutView) {
+                AboutView()
+            }
         }
+    }
+    
+    // Remaining ContentView code...
+
     
     func deleteItem(at offsets: IndexSet) {
         listItems.remove(atOffsets: offsets)
