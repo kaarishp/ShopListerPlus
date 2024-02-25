@@ -169,7 +169,7 @@ struct ListItemDetailView: View {
                     Text("View Total")
                         .padding()
                         .frame(minWidth: 0, maxWidth: .infinity)
-                        .background(Color.blue)
+                        .background(Color.gray)
                         .foregroundColor(.white)
                         .cornerRadius(10)
                 }
