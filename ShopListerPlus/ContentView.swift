@@ -167,7 +167,7 @@ struct ListItemDetailView: View {
                     .cornerRadius(10)
                 }
                 Button(action: {
-                    showingTotalView = true  // Set this to true to show the TotalView
+                    showingTotalView = true
                 }) {
                     Text("View Total")
                         .padding()
@@ -183,8 +183,8 @@ struct ListItemDetailView: View {
         .sheet(isPresented: $showingAddItemView) {
             AddItemView(detailItems: $listItem.items)
         }
-        .sheet(isPresented: $showingTotalView) {  // Present the TotalView as a sheet
-            TotalView(items: listItem.items)  // Pass the list of items to TotalView
+        .sheet(isPresented: $showingTotalView) {
+            TotalView(items: listItem.items)
         }
     }
     
@@ -206,7 +206,6 @@ struct TotalView: View {
                 .fontWeight(.bold)
                 .padding(.top)
 
-            // List the hardcoded items with dividers
             ForEach(items, id: \.self) { item in
                 HStack {
                     Text(item.name)
@@ -217,13 +216,13 @@ struct TotalView: View {
             }
             Spacer()
 
-            VStack(alignment: .trailing) { // Align to the right side
+            VStack(alignment: .trailing) {
                 Text("Total Cost")
                     .fontWeight(.bold)
                 Text("$\(calculateTotal(), specifier: "%.2f")")
             }
-            .frame(maxWidth: .infinity, alignment: .trailing) // Align VStack to the right side
-            .padding(.trailing) // Add padding to the right
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            .padding(.trailing)
 
             Divider()
 
