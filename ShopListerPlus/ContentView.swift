@@ -3,22 +3,47 @@
 //  Project
 //
 //  Created by Kaarish Parameswaran on 2024-02-24.
-//
+//  Group 20
 
 import SwiftUI
 
-struct DetailItem: Identifiable, Hashable {
+struct DetailItem: Identifiable, Hashable, Codable {
     var id = UUID()
     var name: String
     var amount: Int
     var cost: Double
 }
 
-struct ListItem: Identifiable {
+struct ListItem: Identifiable, Codable {
     var id = UUID()
     var title: String
     var count: Int
     var items: [DetailItem] = []
+}
+
+class ListViewModel: ObservableObject {
+    @Published var listItems: [ListItem] = [] {
+        didSet {
+            saveToUserDefaults()
+        }
+    }
+
+    init() {
+        loadFromUserDefaults()
+    }
+
+    func loadFromUserDefaults() {
+        if let data = UserDefaults.standard.data(forKey: "listItems"),
+           let decoded = try? JSONDecoder().decode([ListItem].self, from: data) {
+            listItems = decoded
+        }
+    }
+
+    func saveToUserDefaults() {
+        if let encoded = try? JSONEncoder().encode(listItems) {
+            UserDefaults.standard.set(encoded, forKey: "listItems")
+        }
+    }
 }
 
 
@@ -35,7 +60,7 @@ struct AboutView: View {
             }
             .navigationTitle("Team Members")
             .navigationBarItems(trailing: Button("Done") {
-                presentationMode.wrappedValue.dismiss() 
+                presentationMode.wrappedValue.dismiss()
             })
         }
     }
@@ -162,27 +187,52 @@ struct AddItemView: View {
     }
 }
 
+struct LaunchScreenView: View {
+    @Binding var showingLaunchScreen: Bool
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Text("ShopListPlus")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+            Button("Start") {
+                withAnimation {
+                    showingLaunchScreen = false
+                }
+            }
+            .foregroundColor(.white)
+            .padding()
+            .background(Color.blue)
+            .cornerRadius(10)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.white)
+        .edgesIgnoringSafeArea(.all)
+    }
+}
+
+
 struct ContentView: View {
-    @State private var listItems: [ListItem] = []
+    @StateObject private var viewModel = ListViewModel()
     @State private var showingAddGroupView = false
-    @State private var showingAboutView = false // For showing the AboutView
+    @State private var showingAboutView = false
     
     var body: some View {
-        NavigationView {
-            List {
-                ForEach($listItems) { $item in
-                    NavigationLink(destination: ListItemDetailView(listItem: $item)) {
-                        HStack {
-                            Text(item.title)
-                            Spacer()
-                            Text("\(item.items.count)").foregroundColor(.gray)
+            NavigationView {
+                List {
+                    ForEach($viewModel.listItems) { $item in
+                        NavigationLink(destination: ListItemDetailView(listItem: $item)) {
+                            HStack {
+                                Text(item.title)
+                                Spacer()
+                                Text("\(item.items.count)").foregroundColor(.gray)
+                            }
                         }
                     }
+                    .onDelete(perform: deleteItem)
+                    .onMove(perform: moveItem)
                 }
-                .onDelete(perform: deleteItem)
-                .onMove(perform: moveItem)
-            }
-            .navigationTitle("Grocery List")
+                .navigationTitle("Grocery List")
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("About") {
@@ -199,24 +249,21 @@ struct ContentView: View {
                 }
             }
             .sheet(isPresented: $showingAddGroupView) {
-                AddGroupView(listItems: $listItems)
-            }
-            .sheet(isPresented: $showingAboutView) {
-                AboutView()
-            }
+                            AddGroupView(listItems: $viewModel.listItems) // Modify this to work with ViewModel
+                        }
+                        .sheet(isPresented: $showingAboutView) {
+                            AboutView()
+                        }
         }
     }
     
-    // Remaining ContentView code...
-
-    
     func deleteItem(at offsets: IndexSet) {
-        listItems.remove(atOffsets: offsets)
-    }
+            viewModel.listItems.remove(atOffsets: offsets)
+        }
 
-    func moveItem(from source: IndexSet, to destination: Int) {
-        listItems.move(fromOffsets: source, toOffset: destination)
-    }
+        func moveItem(from source: IndexSet, to destination: Int) {
+            viewModel.listItems.move(fromOffsets: source, toOffset: destination)
+        }
 }
 
 struct ContentView_Previews: PreviewProvider {
