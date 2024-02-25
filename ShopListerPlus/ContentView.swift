@@ -3,6 +3,7 @@
 //  Project
 //
 //  Created by Kaarish Parameswaran on 2024-02-24.
+//  Edited by Ali Al Aoraebi on 2024-02-25.
 //  Group 20
 
 import SwiftUI
@@ -71,15 +72,48 @@ struct AddGroupView: View {
     @Binding var listItems: [ListItem]
     @Environment(\.presentationMode) var presentationMode
     @State private var groupName: String = ""
+    @State private var showAlert = false
 
     var body: some View {
         NavigationView {
-            Form {
-                TextField("Group Name", text: $groupName)
-                Button("Add") {
-                    addNewGroup()
+            VStack {
+                VStack(alignment: .leading, spacing: 20) {
+                    TextField("Group Name", text: $groupName)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding()
                 }
-                .disabled(groupName.isEmpty)
+                .frame(maxWidth: .infinity)
+
+                Spacer()
+
+                Button(action: {
+                    if groupName.isEmpty {
+                        showAlert = true
+                    } else {
+                        addNewGroup()
+                    }
+                }) {
+                    HStack {
+                        Spacer()
+                        Image(systemName: "plus")
+                        Text("Create Group")
+                            .foregroundColor(.white)
+                            .fontWeight(.semibold)
+                        Spacer()
+                    }
+                    .padding()
+                    .background(Color.green)
+                    .cornerRadius(10)
+                    .padding(.horizontal)
+                    .foregroundColor(Color.white)
+                }
+                .alert(isPresented: $showAlert) {
+                    Alert(
+                        title: Text("Error"),
+                        message: Text("Please fill in the fields to add a new group."),
+                        dismissButton: .default(Text("OK"))
+                    )
+                }
             }
             .navigationTitle("Add Group")
         }
@@ -91,7 +125,6 @@ struct AddGroupView: View {
         presentationMode.wrappedValue.dismiss()
     }
 }
-
 
 struct ListItemDetailView: View {
     @Binding var listItem: ListItem
@@ -114,25 +147,39 @@ struct ListItemDetailView: View {
                 }
                 .onDelete(perform: deleteItems)
             }
+            .listStyle(PlainListStyle())
             
-            Button("View Total with Tax") {
-                showingTotalWithTaxAlert = true
-            }
-            .padding()
-            .foregroundColor(.white)
-                        .background(Color.green)
+            HStack {
+                Button(action: {
+                    showingAddItemView = true
+                }) {
+                    HStack {
+                        Image(systemName: "plus")
+                        Text("Add Item")
+                    }
+                    .padding()
+                    .frame(minWidth: 0, maxWidth: .infinity)
+                    .background(Color.green)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                }
+                Button(action: {
+                    showingTotalWithTaxAlert = true
+                }) {
+                    Text("View Total")
+                        .padding()
+                        .frame(minWidth: 0, maxWidth: .infinity)
+                        .background(Color.blue)
+                        .foregroundColor(.white)
                         .cornerRadius(10)
-            .alert(isPresented: $showingTotalWithTaxAlert) {
-                Alert(title: Text("Total Cost with Tax"), message: Text(totalWithTaxAsString()), dismissButton: .default(Text("OK")))
+                }
             }
+            .padding(.horizontal)
         }
         .navigationTitle(listItem.title)
-        .navigationBarItems(trailing: Button(action: {
-            showingAddItemView = true
-        }) {
-            Image(systemName: "plus")
-            Text("Add Item")
-        })
+        .alert(isPresented: $showingTotalWithTaxAlert) {
+            Alert(title: Text("Total Cost with Tax"), message: Text(totalWithTaxAsString()), dismissButton: .default(Text("OK")))
+        }
         .sheet(isPresented: $showingAddItemView) {
             AddItemView(detailItems: $listItem.items)
         }
@@ -148,7 +195,6 @@ struct ListItemDetailView: View {
         listItem.items.remove(atOffsets: offsets)
     }
 }
-
 
 
 struct AddItemView: View {
@@ -218,21 +264,50 @@ struct ContentView: View {
     @State private var showingAboutView = false
     
     var body: some View {
-            NavigationView {
-                List {
-                    ForEach($viewModel.listItems) { $item in
-                        NavigationLink(destination: ListItemDetailView(listItem: $item)) {
-                            HStack {
-                                Text(item.title)
-                                Spacer()
-                                Text("\(item.items.count)").foregroundColor(.gray)
+        NavigationView {
+            VStack {
+                if viewModel.listItems.isEmpty {
+                    Spacer()
+                    Text("No groups. Please add a new group.")
+                        .foregroundColor(.gray)
+                    Spacer()
+                } else {
+                    // This list will show when there are items
+                    List {
+                        ForEach($viewModel.listItems) { $item in
+                            NavigationLink(destination: ListItemDetailView(listItem: $item)) {
+                                HStack {
+                                    Text(item.title)
+                                    Spacer()
+                                    Text("\(item.items.count)").foregroundColor(.gray)
+                                }
                             }
                         }
+                        .onDelete(perform: deleteItem)
+                        .onMove(perform: moveItem)
                     }
-                    .onDelete(perform: deleteItem)
-                    .onMove(perform: moveItem)
                 }
-                .navigationTitle("Grocery List")
+                
+                Button(action: {
+                    showingAddGroupView = true
+                }) {
+                    HStack {
+                        Image(systemName: "plus")
+                        Text("New Group")
+                            .fontWeight(.semibold)
+                    }
+                    .frame(minWidth: 0, maxWidth: .infinity)
+                    .padding()
+                    .foregroundColor(.white)
+                    .background(Color.green)
+                    .cornerRadius(10)
+                }
+                .padding(.horizontal)
+                .sheet(isPresented: $showingAddGroupView) {
+                    AddGroupView(listItems: $viewModel.listItems)
+                }
+            }
+            .navigationTitle("Grocery List")
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("About") {
@@ -240,31 +315,24 @@ struct ContentView: View {
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { showingAddGroupView = true }) {
-                        Label("Add New Group", systemImage: "plus")
-                    }
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
                     EditButton()
                 }
             }
-            .sheet(isPresented: $showingAddGroupView) {
-                            AddGroupView(listItems: $viewModel.listItems)
-                        }
-                        .sheet(isPresented: $showingAboutView) {
-                            AboutView()
-                        }
+            .sheet(isPresented: $showingAboutView) {
+                AboutView()
+            }
         }
     }
     
     func deleteItem(at offsets: IndexSet) {
-            viewModel.listItems.remove(atOffsets: offsets)
-        }
+        viewModel.listItems.remove(atOffsets: offsets)
+    }
 
-        func moveItem(from source: IndexSet, to destination: Int) {
-            viewModel.listItems.move(fromOffsets: source, toOffset: destination)
-        }
+    func moveItem(from source: IndexSet, to destination: Int) {
+        viewModel.listItems.move(fromOffsets: source, toOffset: destination)
+    }
 }
+
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
