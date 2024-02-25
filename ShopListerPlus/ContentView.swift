@@ -41,6 +41,49 @@ class ListViewModel: ObservableObject {
     }
 }
 
+struct AddItemView: View {
+    @Environment(\.presentationMode) var presentationMode
+
+    @State private var itemName: String = ""
+    @State private var itemAmount: String = ""
+    @State private var itemCost: String = ""
+
+    var body: some View {
+        NavigationView {
+            Form {
+                TextField("Item Name", text: $itemName)
+                TextField("Amount", text: $itemAmount)
+                    .keyboardType(.numberPad)
+                TextField("Cost", text: $itemCost)
+                    .keyboardType(.decimalPad)
+                
+                Button("Add Item") {
+                }
+            }
+            .navigationBarTitle("Add Item", displayMode: .inline)
+            .navigationBarItems(trailing: Button("Done") {
+                presentationMode.wrappedValue.dismiss()
+            })
+        }
+    }
+}
+
+
+struct TotalView: View {
+    let items: [DetailItem]
+    
+    var body: some View {
+        VStack {
+            Text("Total Screen")
+            Text("Total Items: \(items.count)")
+            Text("Total Cost: $2.99")
+            Text("Total Cost with Tax: $3.38")
+
+        }
+    }
+}
+
+
 
 struct AboutView: View {
     @Environment(\.presentationMode) var presentationMode
@@ -91,9 +134,10 @@ struct AddGroupView: View {
         }
     }
 }
-
 struct ListItemDetailView: View {
     @Binding var listItem: ListItem
+    @State private var showingAddItemView = false
+    @State private var showingTotalView = false
 
     var body: some View {
         VStack {
@@ -112,25 +156,36 @@ struct ListItemDetailView: View {
 
             Spacer()
 
-            Button("Add Item") {}
-                .padding()
-                .frame(minWidth: 0, maxWidth: .infinity)
-                .background(Color.green)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                .padding(.horizontal)
+            Button("Add Item") {
+                showingAddItemView = true
+            }
+            .padding()
+            .frame(minWidth: 0, maxWidth: .infinity)
+            .background(Color.green)
+            .foregroundColor(.white)
+            .cornerRadius(10)
+            .padding(.horizontal)
+            .sheet(isPresented: $showingAddItemView) {
+                AddItemView()
+            }
 
-            Button("View Total") {}
-                .padding()
-                .frame(minWidth: 0, maxWidth: .infinity)
-                .background(Color.gray.opacity(0.5))
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                .padding(.horizontal)
+            Button("View Total") {
+                showingTotalView = true
+            }
+            .padding()
+            .frame(minWidth: 0, maxWidth: .infinity)
+            .background(Color.gray.opacity(0.5))
+            .foregroundColor(.white)
+            .cornerRadius(10)
+            .padding(.horizontal)
+            .sheet(isPresented: $showingTotalView) {
+                TotalView(items: listItem.items)
+            }
         }
         .navigationTitle(listItem.title)
     }
 }
+
 
 struct ContentView: View {
     @StateObject private var viewModel = ListViewModel()
