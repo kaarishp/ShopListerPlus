@@ -13,20 +13,22 @@
 
 import SwiftUI
 
+// Main Screen Section
 struct ContentView: View {
     @StateObject private var viewModel = ListViewModel()
     @State private var showingAddGroupView = false
     @State private var showingAboutView = false
 
     var body: some View {
-        NavigationView {
+        NavigationView { 
             VStack {
+                // Showing message if there are no created groups
                 if viewModel.listItems.isEmpty {
                     Spacer()
                     Text("No groups. Please add a new group.")
                         .foregroundColor(.gray)
                     Spacer()
-                } else {
+                } else { // Showing lists when group is created
                     List {
                         ForEach($viewModel.listItems) { $item in
                             NavigationLink(destination: ListItemDetailView(listItem: $item)) {
@@ -40,7 +42,7 @@ struct ContentView: View {
                     }
                 }
 
-                Button(action: {
+                Button(action: { //Button that navigates to create group screen
                     showingAddGroupView = true
                 }) {
                     HStack {
@@ -62,7 +64,7 @@ struct ContentView: View {
             .navigationTitle("Grocery List")
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("About") {
+                    Button("About") {//Button navigating to about screen
                         showingAboutView = true
                     }
                 }
@@ -74,13 +76,14 @@ struct ContentView: View {
     }
 }
 
+//Preview struct for ContentView
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView()
+        ContentView()// This creates and returns an instance of ContentView
     }
 }
 
-
+//About Information Screen
 struct AboutView: View {
     @Environment(\.presentationMode) var presentationMode
 
@@ -100,6 +103,7 @@ struct AboutView: View {
     }
 }
 
+//Adding new group screen
 struct AddGroupView: View {
     @Binding var listItems: [ListItem]
     @Environment(\.presentationMode) var presentationMode
@@ -115,7 +119,7 @@ struct AddGroupView: View {
                 Spacer()
 
                 Button("Create Group") {
-                //Create group logic here
+                //Create group logic here for final implementation
                 }
                 .padding()
                 .frame(minWidth: 0, maxWidth: .infinity)
@@ -129,6 +133,7 @@ struct AddGroupView: View {
     }
 }
 
+//List group items screen
 struct ListItemDetailView: View {
     @Binding var listItem: ListItem
     @State private var showingAddItemView = false
@@ -136,7 +141,7 @@ struct ListItemDetailView: View {
 
     var body: some View {
         VStack {
-            List {
+            List { // List details
                 ForEach(listItem.items, id: \.self) { detailItem in
                     HStack {
                         Text(detailItem.name)
@@ -151,9 +156,8 @@ struct ListItemDetailView: View {
 
             Spacer()
 
-            // Add buttons to HStack to place them next to each other
             HStack(spacing: 10) {
-                Button("Add Item") {
+                Button("Add Item") { //Add item button that navigated to add item screen
                     showingAddItemView = true
                 }
                 .padding()
@@ -165,7 +169,7 @@ struct ListItemDetailView: View {
                     AddItemView()
                 }
 
-                Button("View Total") {
+                Button("View Total") { //View total button that navigated to add item screen
                     showingTotalView = true
                 }
                 .padding()
@@ -184,6 +188,7 @@ struct ListItemDetailView: View {
 }
 
 
+//Item details
 struct DetailItem: Identifiable, Hashable, Codable {
     var id = UUID()
     var name: String
@@ -191,6 +196,7 @@ struct DetailItem: Identifiable, Hashable, Codable {
     var cost: Double
 }
 
+// Items inside the list details
 struct ListItem: Identifiable, Codable {
     var id = UUID()
     var title: String
@@ -201,7 +207,7 @@ struct ListItem: Identifiable, Codable {
 class ListViewModel: ObservableObject {
     @Published var listItems: [ListItem] = []
 
-    init() {
+    init() { //Hard-coded data
         let workoutItems = [
             DetailItem(name: "Banana", amount: 2, cost: 0.50),
             DetailItem(name: "Yogurt", amount: 1, cost: 3.99),
@@ -231,6 +237,7 @@ struct AddItemView: View {
                     .keyboardType(.decimalPad)
                 
                 Button("Add Item") {
+                    //Create logic to add item in the list
                 }
             }
             .navigationBarTitle("Add Item", displayMode: .inline)
@@ -242,6 +249,7 @@ struct AddItemView: View {
 }
 
 
+//Total View Screen
 struct TotalView: View {
     let items: [DetailItem]
     let taxRate: Double = 0.13
@@ -256,16 +264,17 @@ struct TotalView: View {
                 .padding(.top)
 
             ForEach(items, id: \.self) { item in
-                HStack {
+                HStack { //showing item name with the cost
                     Text(item.name)
                     Spacer()
                     Text("$\(item.cost, specifier: "%.2f")")
                 }
                 Divider()
             }
+            
             Spacer()
 
-            VStack(alignment: .trailing) {
+            VStack(alignment: .trailing) { // Showing total cost before tax
                 Text("Total Cost")
                     .fontWeight(.bold)
                 Text("$\(calculateTotal(), specifier: "%.2f")")
@@ -276,7 +285,7 @@ struct TotalView: View {
             Divider()
 
             Button("Calculate Total with Tax") {
-                // Action to calculate total with tax
+                // Create logic to calculate total with tax
             }
             .padding()
             .frame(maxWidth: .infinity)
@@ -286,7 +295,7 @@ struct TotalView: View {
 
             Divider()
 
-            VStack(alignment: .trailing) {
+            VStack(alignment: .trailing) { // Showing total cost after tax
                 Text("Total Cost with Tax")
                     .fontWeight(.bold)
                 Text("$\(calculateTotalWithTax(), specifier: "%.2f")")
@@ -299,7 +308,7 @@ struct TotalView: View {
             Spacer()
 
             HStack {
-                Button("Back") {
+                Button("Back") { // Back button to go back to list screen, can swipe screen down as well
                     self.presentationMode.wrappedValue.dismiss()
                 }
                 .frame(minWidth: 0, maxWidth: .infinity)
@@ -309,7 +318,7 @@ struct TotalView: View {
                 .cornerRadius(10)
 
                 Button("Checkout") {
-                    // Action for checkout
+                    // Create logic for checkout
                 }
                 .frame(minWidth: 0, maxWidth: .infinity)
                 .padding()
@@ -321,13 +330,14 @@ struct TotalView: View {
         .padding()
     }
     
+    // Total cost of items
     private func calculateTotal() -> Double {
-        // Total cost of items
         return items.reduce(0) { $0 + $1.cost * Double($1.amount) }
     }
     
+    // Total cost including tax
+
     private func calculateTotalWithTax() -> Double {
-        // Total cost including tax
         return calculateTotal() * (1 + taxRate)
     }
 }
