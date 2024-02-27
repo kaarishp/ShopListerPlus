@@ -9,9 +9,24 @@ import SwiftUI
 
 @main
 struct ShopListerPlusApp: App {
+    @StateObject private var viewModel = ListViewModel()
+    @State private var isActive: Bool = false
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            if isActive {
+                ContentView()
+                    .environmentObject(viewModel)
+            } else {
+                LaunchScreen()
+                    .onAppear {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) {
+                            withAnimation {
+                                isActive = true
+                            }
+                        }
+                    }
+            }
         }
     }
 }

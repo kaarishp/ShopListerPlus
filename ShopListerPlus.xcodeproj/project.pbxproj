@@ -14,6 +14,7 @@
 		3C3A417E2B8A9DDA00257AB9 /* ShopListerPlusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C3A417D2B8A9DDA00257AB9 /* ShopListerPlusTests.swift */; };
 		3C3A41882B8A9DDA00257AB9 /* ShopListerPlusUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C3A41872B8A9DDA00257AB9 /* ShopListerPlusUITests.swift */; };
 		3C3A418A2B8A9DDA00257AB9 /* ShopListerPlusUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C3A41892B8A9DDA00257AB9 /* ShopListerPlusUITestsLaunchTests.swift */; };
+		412EFEAC2B8D818B00F4525F /* LaunchScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 412EFEAB2B8D818B00F4525F /* LaunchScreen.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -44,6 +45,7 @@
 		3C3A41832B8A9DDA00257AB9 /* ShopListerPlusUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShopListerPlusUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3C3A41872B8A9DDA00257AB9 /* ShopListerPlusUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopListerPlusUITests.swift; sourceTree = "<group>"; };
 		3C3A41892B8A9DDA00257AB9 /* ShopListerPlusUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopListerPlusUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		412EFEAB2B8D818B00F4525F /* LaunchScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchScreen.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -98,6 +100,7 @@
 				3C3A416E2B8A9DD700257AB9 /* ContentView.swift */,
 				3C3A41702B8A9DDA00257AB9 /* Assets.xcassets */,
 				3C3A41722B8A9DDA00257AB9 /* Preview Content */,
+				412EFEAB2B8D818B00F4525F /* LaunchScreen.swift */,
 			);
 			path = ShopListerPlus;
 			sourceTree = "<group>";
@@ -259,6 +262,7 @@
 			files = (
 				3C3A416F2B8A9DD700257AB9 /* ContentView.swift in Sources */,
 				3C3A416D2B8A9DD700257AB9 /* ShopListerPlusApp.swift in Sources */,
+				412EFEAC2B8D818B00F4525F /* LaunchScreen.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
