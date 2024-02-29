@@ -13,77 +13,46 @@
 
 import SwiftUI
 
-// Main Screen Section
-struct ContentView: View {
-    @StateObject private var viewModel = ListViewModel()
-    @State private var showingAddGroupView = false
-    @State private var showingAboutView = false
+struct DetailItem: Identifiable, Hashable, Codable {
+    var id = UUID()
+    var name: String
+    var amount: Int
+    var cost: Double
+}
 
-    var body: some View {
-        NavigationView { 
-            VStack {
-                // Showing message if there are no created groups
-                if viewModel.listItems.isEmpty {
-                    Spacer()
-                    Text("No groups. Please add a new group.")
-                        .foregroundColor(.gray)
-                    Spacer()
-                } else { // Showing lists when group is created
-                    List {
-                        ForEach($viewModel.listItems) { $item in
-                            NavigationLink(destination: ListItemDetailView(listItem: $item)) {
-                                HStack {
-                                    Text(item.title)
-                                    Spacer()
-                                    Text("\(item.items.count)").foregroundColor(.gray)
-                                }
-                            }
-                        }
-                    }
-                }
+struct ListItem: Identifiable, Codable {
+    var id = UUID()
+    var title: String
+    var count: Int
+    var items: [DetailItem] = []
+}
 
-                Button(action: { //Button that navigates to create group screen
-                    showingAddGroupView = true
-                }) {
-                    HStack {
-                        Image(systemName: "plus")
-                        Text("New Group")
-                            .fontWeight(.semibold)
-                    }
-                    .frame(minWidth: 0, maxWidth: .infinity)
-                    .padding()
-                    .foregroundColor(.white)
-                    .background(Color(hex: "#1AE51A"))
-                    .cornerRadius(10)
-                }
-                .padding(.horizontal)
-                .sheet(isPresented: $showingAddGroupView) {
-                    AddGroupView(listItems: $viewModel.listItems)
-                }
-            }
-            .navigationTitle("Grocery List")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("About") {//Button navigating to about screen
-                        showingAboutView = true
-                    }
-                }
-            }
-            .sheet(isPresented: $showingAboutView) {
-                AboutView()
-            }
+class ListViewModel: ObservableObject {
+    @Published var listItems: [ListItem] = [] {
+        didSet {
+            saveToUserDefaults()
+        }
+    }
+
+    init() {
+        loadFromUserDefaults()
+    }
+
+    func loadFromUserDefaults() {
+        if let data = UserDefaults.standard.data(forKey: "listItems"),
+           let decoded = try? JSONDecoder().decode([ListItem].self, from: data) {
+            listItems = decoded
+        }
+    }
+
+    func saveToUserDefaults() {
+        if let encoded = try? JSONEncoder().encode(listItems) {
+            UserDefaults.standard.set(encoded, forKey: "listItems")
         }
     }
 }
 
-//Preview struct for ContentView
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()// This creates and returns an instance of ContentView
-    }
-}
 
-//About Information Screen
 struct AboutView: View {
     @Environment(\.presentationMode) var presentationMode
 
@@ -103,45 +72,73 @@ struct AboutView: View {
     }
 }
 
-//Adding new group screen
+
 struct AddGroupView: View {
     @Binding var listItems: [ListItem]
     @Environment(\.presentationMode) var presentationMode
     @State private var groupName: String = ""
+    @State private var showAlert = false
 
     var body: some View {
         NavigationView {
             VStack {
-                TextField("Group Name", text: $groupName)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .padding()
+                VStack(alignment: .leading, spacing: 20) {
+                    TextField("Group Name", text: $groupName)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding()
+                }
+                .frame(maxWidth: .infinity)
 
                 Spacer()
 
-                Button("Create Group") {
-                //Create group logic here for final implementation
+                Button(action: {
+                    if groupName.isEmpty {
+                        showAlert = true
+                    } else {
+                        addNewGroup()
+                    }
+                }) {
+                    HStack {
+                        Spacer()
+                        Image(systemName: "plus")
+                        Text("Create Group")
+                            .foregroundColor(.white)
+                            .fontWeight(.semibold)
+                        Spacer()
+                    }
+                    .padding()
+                    .background(Color.green)
+                    .cornerRadius(10)
+                    .padding(.horizontal)
+                    .foregroundColor(Color.white)
                 }
-                .padding()
-                .frame(minWidth: 0, maxWidth: .infinity)
-                .background(Color(hex: "#1AE51A"))
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                .padding(.horizontal)
+                .alert(isPresented: $showAlert) {
+                    Alert(
+                        title: Text("Error"),
+                        message: Text("Please fill in the fields to add a new group."),
+                        dismissButton: .default(Text("OK"))
+                    )
+                }
             }
             .navigationTitle("Add Group")
         }
     }
+
+    private func addNewGroup() {
+        let newItem = ListItem(title: groupName, count: 0)
+        listItems.append(newItem)
+        presentationMode.wrappedValue.dismiss()
+    }
 }
 
-//List group items screen
 struct ListItemDetailView: View {
     @Binding var listItem: ListItem
     @State private var showingAddItemView = false
     @State private var showingTotalView = false
-
+    
     var body: some View {
         VStack {
-            List { // List details
+            List {
                 ForEach(listItem.items, id: \.self) { detailItem in
                     HStack {
                         Text(detailItem.name)
@@ -151,105 +148,51 @@ struct ListItemDetailView: View {
                         Text("$\(detailItem.cost, specifier: "%.2f")")
                     }
                 }
+                .onDelete(perform: deleteItems)
             }
             .listStyle(PlainListStyle())
-
-            Spacer()
-
-            HStack(spacing: 10) {
-                Button("Add Item") { //Add item button that navigated to add item screen
+            
+            HStack {
+                Button(action: {
                     showingAddItemView = true
+                }) {
+                    HStack {
+                        Image(systemName: "plus")
+                        Text("Add Item")
+                    }
+                    .padding()
+                    .frame(minWidth: 0, maxWidth: .infinity)
+                    .background(Color.green)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
                 }
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(Color(hex: "#1AE51A"))
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                .sheet(isPresented: $showingAddItemView) {
-                    AddItemView()
-                }
-
-                Button("View Total") { //View total button that navigated to add item screen
+                Button(action: {
                     showingTotalView = true
-                }
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(Color.gray.opacity(0.5))
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                .sheet(isPresented: $showingTotalView) {
-                    TotalView(items: listItem.items)
+                }) {
+                    Text("View Total")
+                        .padding()
+                        .frame(minWidth: 0, maxWidth: .infinity)
+                        .background(Color.gray.opacity(0.5))
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
                 }
             }
             .padding(.horizontal)
         }
         .navigationTitle(listItem.title)
-    }
-}
-
-
-//Item details
-struct DetailItem: Identifiable, Hashable, Codable {
-    var id = UUID()
-    var name: String
-    var amount: Int
-    var cost: Double
-}
-
-// Items inside the list details
-struct ListItem: Identifiable, Codable {
-    var id = UUID()
-    var title: String
-    var count: Int
-    var items: [DetailItem] = []
-}
-
-class ListViewModel: ObservableObject {
-    @Published var listItems: [ListItem] = []
-
-    init() { //Hard-coded data
-        let workoutItems = [
-            DetailItem(name: "Banana", amount: 2, cost: 0.50),
-            DetailItem(name: "Yogurt", amount: 1, cost: 3.99),
-            DetailItem(name: "Protien", amount: 1, cost: 9.99),
-            DetailItem(name: "Chicken", amount: 1, cost: 6.99)
-        ]
-        let workoutGroup = ListItem(title: "Workout", count: workoutItems.count, items: workoutItems)
-        
-        listItems = [workoutGroup]
-    }
-}
-
-struct AddItemView: View {
-    @Environment(\.presentationMode) var presentationMode
-
-    @State private var itemName: String = ""
-    @State private var itemAmount: String = ""
-    @State private var itemCost: String = ""
-
-    var body: some View {
-        NavigationView {
-            Form {
-                TextField("Item Name", text: $itemName)
-                TextField("Amount", text: $itemAmount)
-                    .keyboardType(.numberPad)
-                TextField("Cost", text: $itemCost)
-                    .keyboardType(.decimalPad)
-                
-                Button("Add Item") {
-                    //Create logic to add item in the list
-                }
-            }
-            .navigationBarTitle("Add Item", displayMode: .inline)
-            .navigationBarItems(trailing: Button("Done") {
-                presentationMode.wrappedValue.dismiss()
-            })
+        .sheet(isPresented: $showingAddItemView) {
+            AddItemView(detailItems: $listItem.items)
+        }
+        .sheet(isPresented: $showingTotalView) {
+            TotalView(items: listItem.items)
         }
     }
+    
+    private func deleteItems(at offsets: IndexSet) {
+        listItem.items.remove(atOffsets: offsets)
+    }
 }
 
-
-//Total View Screen
 struct TotalView: View {
     let items: [DetailItem]
     let taxRate: Double = 0.13
@@ -264,17 +207,18 @@ struct TotalView: View {
                 .padding(.top)
 
             ForEach(items, id: \.self) { item in
-                HStack { //showing item name with the cost
+                HStack {
                     Text(item.name)
                     Spacer()
                     Text("$\(item.cost, specifier: "%.2f")")
                 }
                 Divider()
             }
-            
+            Spacer()
+            Spacer()
             Spacer()
 
-            VStack(alignment: .trailing) { // Showing total cost before tax
+            VStack(alignment: .trailing) {
                 Text("Total Cost")
                     .fontWeight(.bold)
                 Text("$\(calculateTotal(), specifier: "%.2f")")
@@ -282,20 +226,20 @@ struct TotalView: View {
             .frame(maxWidth: .infinity, alignment: .trailing)
             .padding(.trailing)
 
+//            Divider()
+//
+//            Button("Calculate Total with Tax") {
+//                // Action to calculate total with tax
+//            }
+//            .padding()
+//            .frame(maxWidth: .infinity)
+//            .background(Color.gray.opacity(0.5))
+//            .foregroundColor(.white)
+//            .cornerRadius(10)
+
             Divider()
 
-            Button("Calculate Total with Tax") {
-                // Create logic to calculate total with tax
-            }
-            .padding()
-            .frame(maxWidth: .infinity)
-            .background(Color.gray.opacity(0.5))
-            .foregroundColor(.white)
-            .cornerRadius(10)
-
-            Divider()
-
-            VStack(alignment: .trailing) { // Showing total cost after tax
+            VStack(alignment: .trailing) {
                 Text("Total Cost with Tax")
                     .fontWeight(.bold)
                 Text("$\(calculateTotalWithTax(), specifier: "%.2f")")
@@ -303,12 +247,11 @@ struct TotalView: View {
             .frame(maxWidth: .infinity, alignment: .trailing)
             .padding(.trailing)
 
-            Divider()
             
             Spacer()
 
             HStack {
-                Button("Back") { // Back button to go back to list screen, can swipe screen down as well
+                Button("View Item List") {
                     self.presentationMode.wrappedValue.dismiss()
                 }
                 .frame(minWidth: 0, maxWidth: .infinity)
@@ -318,11 +261,11 @@ struct TotalView: View {
                 .cornerRadius(10)
 
                 Button("Checkout") {
-                    // Create logic for checkout
+                    // Action for checkout
                 }
                 .frame(minWidth: 0, maxWidth: .infinity)
                 .padding()
-                .background(Color(hex: "#1AE51A"))
+                .background(Color.green)
                 .foregroundColor(.white)
                 .cornerRadius(10)
             }
@@ -330,33 +273,156 @@ struct TotalView: View {
         .padding()
     }
     
-    // Total cost of items
     private func calculateTotal() -> Double {
+        // Total cost of items
         return items.reduce(0) { $0 + $1.cost * Double($1.amount) }
     }
     
-    // Total cost including tax
-
     private func calculateTotalWithTax() -> Double {
+        // Total cost including tax
         return calculateTotal() * (1 + taxRate)
     }
 }
 
+struct AddItemView: View {
+    @Binding var detailItems: [DetailItem]
+    @Environment(\.presentationMode) var presentationMode
+    @State private var itemName: String = ""
+    @State private var itemAmount: String = ""
+    @State private var itemCost: String = ""
+
+    var body: some View {
+        NavigationView {
+            Form {
+                TextField("Item Name", text: $itemName)
+                TextField("Amount", text: $itemAmount)
+                    .keyboardType(.numberPad)
+                TextField("Cost", text: $itemCost)
+                    .keyboardType(.decimalPad)
+                Button("Add Item") {
+                    addNewItem()
+                }
+                .disabled(itemName.isEmpty || itemAmount.isEmpty || itemCost.isEmpty)
+            }
+            .navigationTitle("Add Item")
+            .navigationBarItems(leading: Button("Back") {
+                presentationMode.wrappedValue.dismiss()
+            })
+        }
+    }
+
+    private func addNewItem() {
+        if let amount = Int(itemAmount), let cost = Double(itemCost) {
+            let newItem = DetailItem(name: itemName, amount: amount, cost: cost)
+            detailItems.append(newItem)
+            presentationMode.wrappedValue.dismiss()
+        }
+    }
+}
+
+struct LaunchScreenView: View {
+    @Binding var showingLaunchScreen: Bool
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Text("ShopListPlus")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+            Button("Start") {
+                withAnimation {
+                    showingLaunchScreen = false
+                }
+            }
+            .foregroundColor(.white)
+            .padding()
+            .background(Color.blue)
+            .cornerRadius(10)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.white)
+        .edgesIgnoringSafeArea(.all)
+    }
+}
 
 
-extension Color {
-    init(hex: String) {
-        let scanner = Scanner(string: hex)
-        _ = scanner.scanString("#")
-        
-        var rgb: UInt64 = 0
-        scanner.scanHexInt64(&rgb)
-        
-        let r = Double((rgb >> 16) & 0xFF) / 255.0
-        let g = Double((rgb >> 8) & 0xFF) / 255.0
-        let b = Double(rgb & 0xFF) / 255.0
-        
-        self.init(red: r, green: g, blue: b)
+struct ContentView: View {
+    @StateObject private var viewModel = ListViewModel()
+    @State private var showingAddGroupView = false
+    @State private var showingAboutView = false
+    
+    var body: some View {
+        NavigationView {
+            VStack {
+                if viewModel.listItems.isEmpty {
+                    Spacer()
+                    Text("No groups. Please add a new group.")
+                        .foregroundColor(.gray)
+                    Spacer()
+                } else {
+                    // This list will show when there are items
+                    List {
+                        ForEach($viewModel.listItems) { $item in
+                            NavigationLink(destination: ListItemDetailView(listItem: $item)) {
+                                HStack {
+                                    Text(item.title)
+                                    Spacer()
+                                    Text("\(item.items.count)").foregroundColor(.gray)
+                                }
+                            }
+                        }
+                        .onDelete(perform: deleteItem)
+                        .onMove(perform: moveItem)
+                    }
+                }
+                
+                Button(action: {
+                    showingAddGroupView = true
+                }) {
+                    HStack {
+                        Image(systemName: "plus")
+                        Text("New Group")
+                            .fontWeight(.semibold)
+                    }
+                    .frame(minWidth: 0, maxWidth: .infinity)
+                    .padding()
+                    .foregroundColor(.white)
+                    .background(Color.green)
+                    .cornerRadius(10)
+                }
+                .padding(.horizontal)
+                .sheet(isPresented: $showingAddGroupView) {
+                    AddGroupView(listItems: $viewModel.listItems)
+                }
+            }
+            .navigationTitle("Grocery List")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("About") {
+                        showingAboutView = true
+                    }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    EditButton()
+                }
+            }
+            .sheet(isPresented: $showingAboutView) {
+                AboutView()
+            }
+        }
+    }
+    
+    func deleteItem(at offsets: IndexSet) {
+        viewModel.listItems.remove(atOffsets: offsets)
+    }
+
+    func moveItem(from source: IndexSet, to destination: Int) {
+        viewModel.listItems.move(fromOffsets: source, toOffset: destination)
+    }
+}
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
     }
 }
 
