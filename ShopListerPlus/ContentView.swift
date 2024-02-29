@@ -184,8 +184,10 @@ struct ListItemDetailView: View {
             AddItemView(detailItems: $listItem.items)
         }
         .sheet(isPresented: $showingTotalView) {
-            TotalView(items: listItem.items)
-        }
+                    TotalView(items: listItem.items, onCheckoutCompleted: {
+                        listItem.items.removeAll()
+                    })
+                }
     }
     
     private func deleteItems(at offsets: IndexSet) {
@@ -194,10 +196,11 @@ struct ListItemDetailView: View {
 }
 
 struct TotalView: View {
-    let items: [DetailItem]
-    let taxRate: Double = 0.13
-    @Environment(\.presentationMode)
-    var presentationMode : Binding<PresentationMode>
+    var items: [DetailItem]
+        var onCheckoutCompleted: (() -> Void)?
+        @Environment(\.presentationMode) var presentationMode
+        let taxRate: Double = 0.13
+        @State private var showingCheckoutAlert = false
 
     var body: some View {
         VStack {
@@ -226,17 +229,6 @@ struct TotalView: View {
             .frame(maxWidth: .infinity, alignment: .trailing)
             .padding(.trailing)
 
-//            Divider()
-//
-//            Button("Calculate Total with Tax") {
-//                // Action to calculate total with tax
-//            }
-//            .padding()
-//            .frame(maxWidth: .infinity)
-//            .background(Color.gray.opacity(0.5))
-//            .foregroundColor(.white)
-//            .cornerRadius(10)
-
             Divider()
 
             VStack(alignment: .trailing) {
@@ -261,13 +253,23 @@ struct TotalView: View {
                 .cornerRadius(10)
 
                 Button("Checkout") {
-                    // Action for checkout
-                }
-                .frame(minWidth: 0, maxWidth: .infinity)
-                .padding()
-                .background(Color.green)
-                .foregroundColor(.white)
-                .cornerRadius(10)
+                            showingCheckoutAlert = true
+                        }
+                        .alert(isPresented: $showingCheckoutAlert) {
+                            Alert(
+                                title: Text("Checkout"),
+                                message: Text("Checkout successfully."),
+                                dismissButton: .default(Text("OK")) {
+                                    onCheckoutCompleted?()
+                                }
+                            )
+                        }
+                        .frame(minWidth: 0, maxWidth:
+                        .infinity)
+                        .padding()
+                        .background(Color.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
             }
         }
         .padding()
