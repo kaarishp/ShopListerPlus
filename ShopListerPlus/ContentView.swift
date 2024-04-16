@@ -13,6 +13,7 @@
 
 import SwiftUI
 
+//By Amir
 struct DetailItem: Identifiable, Hashable, Codable {
     var id = UUID()
     var name: String
@@ -52,7 +53,7 @@ class ListViewModel: ObservableObject {
     }
 }
 
-
+// By Kaarish
 struct AboutView: View {
     @Environment(\.presentationMode) var presentationMode
 
@@ -72,7 +73,7 @@ struct AboutView: View {
     }
 }
 
-
+// By Alvaro
 struct AddGroupView: View {
     @Binding var listItems: [ListItem]
     @Environment(\.presentationMode) var presentationMode
@@ -131,6 +132,7 @@ struct AddGroupView: View {
     }
 }
 
+// By Alvaro
 struct ListItemDetailView: View {
     @Binding var listItem: ListItem
     @State private var showingAddItemView = false
@@ -225,6 +227,7 @@ extension NumberFormatter {
     }
 }
 
+// By Ali
 struct TotalView: View {
     var items: [DetailItem]
         var onCheckoutCompleted: (() -> Void)?
@@ -316,6 +319,7 @@ struct TotalView: View {
     }
 }
 
+// By Ali
 struct AddItemView: View {
     @Binding var detailItems: [DetailItem]
     @Environment(\.presentationMode) var presentationMode
@@ -352,7 +356,7 @@ struct AddItemView: View {
     }
 }
 
-
+// By Kaarish
 struct LaunchScreenView: View {
     @Binding var showingLaunchScreen: Bool
 
@@ -377,7 +381,7 @@ struct LaunchScreenView: View {
     }
 }
 
-
+// Kaarish
 struct ContentView: View {
     @StateObject private var viewModel = ListViewModel()
     @State private var showingAddGroupView = false
