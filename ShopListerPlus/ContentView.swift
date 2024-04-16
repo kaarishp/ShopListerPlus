@@ -139,13 +139,28 @@ struct ListItemDetailView: View {
     var body: some View {
         VStack {
             List {
-                ForEach(listItem.items, id: \.self) { detailItem in
+                ForEach(listItem.items.indices, id: \.self) { index in
                     HStack {
-                        Text(detailItem.name)
+                        Text(listItem.items[index].name)
+                            .frame(width: 80, alignment: .leading)
                         Spacer()
-                        Text("x\(detailItem.amount)")
+                        HStack {
+                            Button(action: { self.changeAmount(for: index, delta: -1) }) {
+                                Image(systemName: "minus.circle.fill")
+                            }
+                            Text("\(listItem.items[index].amount)")
+                                .frame(width: 20, alignment: .center)
+                            Button(action: { self.changeAmount(for: index, delta: 1) }) {
+                                Image(systemName: "plus.circle.fill")
+                            }
+                        }
+                        .foregroundColor(.green)
+                        .buttonStyle(PlainButtonStyle())
                         Spacer()
-                        Text("$\(detailItem.cost, specifier: "%.2f")")
+                        TextField("Price", value: $listItem.items[index].cost, formatter: NumberFormatter.currency)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .keyboardType(.decimalPad)
+                            .frame(width: 80, alignment: .trailing)
                     }
                 }
                 .onDelete(perform: deleteItems)
@@ -184,14 +199,29 @@ struct ListItemDetailView: View {
             AddItemView(detailItems: $listItem.items)
         }
         .sheet(isPresented: $showingTotalView) {
-                    TotalView(items: listItem.items, onCheckoutCompleted: {
-                        listItem.items.removeAll()
-                    })
-                }
+            TotalView(items: listItem.items, onCheckoutCompleted: {
+                listItem.items.removeAll()
+            })
+        }
+    }
+    
+    private func changeAmount(for index: Int, delta: Int) {
+        let newAmount = listItem.items[index].amount + delta
+        listItem.items[index].amount = max(newAmount, 0)
     }
     
     private func deleteItems(at offsets: IndexSet) {
         listItem.items.remove(atOffsets: offsets)
+    }
+}
+
+// Utility formatter for the currency
+extension NumberFormatter {
+    static var currency: NumberFormatter {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.isLenient = true
+        return formatter
     }
 }
 
@@ -321,6 +351,7 @@ struct AddItemView: View {
         }
     }
 }
+
 
 struct LaunchScreenView: View {
     @Binding var showingLaunchScreen: Bool
